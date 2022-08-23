@@ -1,52 +1,58 @@
-import time
-
-import requests
 import streamlit as st
-from PIL import Image
+from backend import ServiceError, imagine_from_backend, get_version
 
-STYLES = {
-    "candy": "candy",
-    "composition 6": "composition_vii",
-    "feathers": "feathers",
-    "la_muse": "la_muse",
-    "mosaic": "mosaic",
-    "starry night": "starry_night",
-    "the scream": "the_scream",
-    "the wave": "the_wave",
-    "udnie": "udnie",
-}
 
-st.set_option("deprecation.showfileUploaderEncoding", False)
+backend_url = st.secrets["BACKEND_SERVER"]
 
-st.title("Disco Diffusion Simulator")
+st.title("ekorpkit-app: Disco Diffusion Simulator")
+st.header("Generate images from text")
 
-image = st.file_uploader("Choose an image")
 
-style = st.selectbox("Choose the style", [i for i in STYLES.keys()])
+text_prompts = st.text_input(
+    "What do you want to see?", "Beautiful photorealistic rendering of Jeju Island."
+)
+init_image = st.file_uploader("Choose an image")
+steps = st.slider("Number of diffusion steps", 25, 1000, 250)
 
-if st.button("Style Transfer"):
-    if image is not None and style is not None:
-        files = {"file": image.getvalue()}
-        res = requests.post(f"http://backend:8080/{style}", files=files)
-        img_path = res.json()
-        image = Image.open(img_path.get("name"))
-        st.image(image)
 
-        displayed_styles = [style]
-        displayed = 1
-        total = len(STYLES)
+if st.button("Imagine!") and len(text_prompts) > 0:
+    container = st.empty()
+    container.markdown(
+        f"""
+        <style> p {{ margin:0 }} div {{ margin:0 }} </style>
+        <div data-stale="false" class="element-container">
+        <div class="stAlert">
+        <div data-testid="stMarkdownContainer">
+                <img src="https://raw.githubusercontent.com/entelecheia/ekorpkit-app/main/assets/loading.gif" width="30"/>
+                Imagining for: <b>{text_prompts}</b>
+        </div>
+        </div>
+        </div>
+        <small><i>Imagining may take up to 10mn. Please stand by.</i></small>
+    """,
+        unsafe_allow_html=True,
+    )
 
-        st.write("Generating other models...")
+    try:
+        response = imagine_from_backend(backend_url, text_prompts, steps)
+        selected = response["images"]
+        version = response["version"]
 
-        while displayed < total:
-            for style in STYLES:
-                if style not in displayed_styles:
-                    try:
-                        path = f"{img_path.get('name').split('.')[0]}_{STYLES[style]}.jpg"
-                        image = Image.open(path)
-                        st.image(image, width=500)
-                        time.sleep(1)
-                        displayed += 1
-                        displayed_styles.append(style)
-                    except:
-                        pass
+        margin = 0.1  # for better position of zoom in arrow
+        n_columns = 3
+        cols = st.columns([1] + [margin, 1] * (n_columns - 1))
+        for i, img in enumerate(selected):
+            cols[(i % n_columns) * 2].image(img)
+        container.markdown(f"**{text_prompts}**")
+
+        st.button("Imagine again!", key="again_button")
+
+    except ServiceError as error:
+        container.text(f"Service unavailable, status: {error.status_code}")
+    except KeyError:
+        container.markdown("Please try again or [report it](mailto:yj.lee@chu.ac.kr).")
+
+st.write(
+    f"<small><center>version: {get_version(backend_url)}</center></small>",
+    unsafe_allow_html=True,
+)

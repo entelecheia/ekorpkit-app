@@ -1,19 +1,11 @@
-import asyncio
-from email import generator
-import time
-import uuid
-from concurrent.futures import ProcessPoolExecutor
-from functools import partial
-from PIL import Image
-from fastapi import FastAPI
-from pydantic import BaseModel, ValidationError
-from fastapi.responses import Response
-from typing import Generator
-from starlette.responses import StreamingResponse
 import io
-import PIL
-
+import uuid
 import uvicorn
+import base64
+from PIL import Image
+from pydantic import BaseModel
+from fastapi import FastAPI, WebSocket
+from fastapi.responses import Response
 from fastapi import File
 from fastapi import FastAPI
 from fastapi import UploadFile
@@ -47,32 +39,52 @@ def read_env():
 
 
 class ImagineRequest(BaseModel):
-    text_prompts: str = "Beautiful photorealistic rendering of Jeju Island"
+    text_prompts: str = "Beautiful photorealistic rendering of Jeju Island."
     batch_name: str = str(uuid.uuid4())
-    steps = 250
+    steps = 100
     display_rate = 10
+    n_samples = 1
 
 
-@app.post("/disco")
+@app.post("/imagine")
 async def imagine(req: ImagineRequest):
-    images = get_image(req)
-    reponse = StreamingResponse(images, media_type="image/png")
-    return reponse
+    req = req.dict()
+    req["n_samples"] = 1
+    response = disco.imagine(**req)
+    image_filepaths = response.get("image_filepaths", [])
+    if image_filepaths:
+        response["images"] = [
+            image_to_bytearr(Image.open(img_file)) for img_file in image_filepaths
+        ]
+    return response
 
 
-def get_image(req: ImagineRequest):
-    for i, sample in enumerate(disco.imagine_generator(**req.dict())):
-        image = sample["image"]
-        print(i, sample["path"])
-        image_as_bytes = image_to_bytearray(image)
-        yield image_as_bytes
+@app.websocket("/imagine_stream")
+async def imagine_websocket(websocket: WebSocket, req: ImagineRequest):
+    await websocket.accept()
+    while True:
+        if req is not None:
+            for sample in get_samples(req):
+                await websocket.send_json(sample)
 
 
-def image_to_bytearray(image: Image) -> bytes:
+def get_samples(req: ImagineRequest):
+    req = req.dict()
+    for i, sample in enumerate(disco.imagine_generator(**req)):
+        image = sample.get("image")
+        if image is not None:
+            print(i, sample)
+            sample["image"] = image_to_bytearr(image)
+        yield sample
+
+
+def image_to_bytearr(image: Image):
     img_bytearr = io.BytesIO()
-    image.save(img_bytearr, format="png")
+    image.save(img_bytearr, format=image.format)
     img_bytearr = img_bytearr.getvalue()
-    return img_bytearr
+    encoded = base64.b64encode(img_bytearr)
+    decoded = encoded.decode("ascii")
+    return decoded
 
 
 if __name__ == "__main__":

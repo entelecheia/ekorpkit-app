@@ -1,1 +1,24 @@
 version: '3'
+
+services:
+  ekorpkit-frontend:
+    image: entelecheia/ekorpkit-frontend:latest
+    ports:
+      - 18501:8501
+    depends_on:
+      - ekorpkit-backend
+    volumes:
+        - /home/yjlee/workspace:/workspace
+  ekorpkit-backend:
+    image: entelecheia/ekorpkit-backend:latest
+    ports:
+      - 18181:8080
+    volumes:
+        - /home/yjlee/workspace:/workspace
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              device_ids: ["7"]
+              capabilities: [gpu]

@@ -1,12 +1,15 @@
 FROM python:3.10.1-slim
 
-WORKDIR /app
+ENV WORK_DIR=/app
+WORKDIR $WORK_DIR
 
-COPY requirements.txt .
-RUN pip install -r requirements.txt
+RUN pip install --upgrade --no-cache-dir pip && \
+    pip install --no-cache-dir streamlit
 
-COPY . .
+COPY ./app .
 
 EXPOSE 8501
 
-CMD ["streamlit", "run", "main.py"]
+# CMD ["streamlit", "run", "main.py"]
+# CMD ["bash", "./run-app.sh"]
+CMD ["/bin/bash"]

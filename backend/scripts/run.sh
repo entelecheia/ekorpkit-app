@@ -10,6 +10,7 @@ docker run -it --rm \
   --ulimit memlock=-1 \
   --ulimit stack=67108864 \
   --env-file .env \
+  --net $EKORPKIT_APP_DOCKER_NETWORK \
   --publish $EKORPKIT_BACKEND_HOST_PORT:$EKORPKIT_BACKEND_DOCKER_PORT \
   --volume ${PWD}${EKORPKIT_BACKEND_APP_DIR}:${EKORPKIT_BACKEND_APP_DIR} \
   --volume $HOST_WORKSPACE_ROOT:$EKORPKIT_WORKSPACE_ROOT \
