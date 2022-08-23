@@ -4,7 +4,7 @@ set -o allexport
 source .env
 set +o allexport
 
-docker run -it --rm \
+docker run -d --rm \
   --runtime=nvidia \
   --gpus $NVIDIA_VISIBLE_DEVICES \
   --ulimit memlock=-1 \

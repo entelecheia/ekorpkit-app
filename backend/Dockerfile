@@ -28,11 +28,10 @@ RUN pip install --upgrade --no-cache-dir pip && \
         einops ftfy seaborn flax unidecode opencv-python==4.5.5.64 \
         fastapi uvicorn
 
-RUN pip install --no-cache-dir --pre --upgrade ekorpkit
+RUN pip install --no-cache-dir --pre --upgrade ekorpkit>=0.1.38.post0.dev19
 
 COPY ./app .
 
 EXPOSE 8080
 
-# CMD ["python", "main.py"]
 CMD ["bash", "./run-app.sh"]

@@ -10,6 +10,4 @@ COPY ./app .
 
 EXPOSE 8501
 
-# CMD ["streamlit", "run", "main.py"]
-# CMD ["bash", "./run-app.sh"]
-CMD ["/bin/bash"]
+CMD ["bash", "./run-app.sh"]

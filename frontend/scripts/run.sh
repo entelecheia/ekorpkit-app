@@ -4,7 +4,7 @@ set -o allexport
 source .env
 set +o allexport
 
-docker run -it --rm \
+docker run -d --rm \
   --env-file .env \
   --net $EKORPKIT_APP_DOCKER_NETWORK \
   --publish $EKORPKIT_FRONTEND_HOST_PORT:$EKORPKIT_FRONTEND_DOCKER_PORT \
