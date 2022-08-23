@@ -50,9 +50,10 @@ class ImagineRequest(BaseModel):
 
 @app.post("/imagine")
 async def imagine(req: ImagineRequest):
+    batch_name = str(uuid.uuid4())
+    req.batch_name = batch_name
     req = req.dict()
     init_image = req.get("init_image")
-    batch_name = req.get("batch_name")
     if init_image is not None:
         init_image = bytearr_to_image(init_image)
         init_image_path = disco.save_init_image(batch_name, init_image)

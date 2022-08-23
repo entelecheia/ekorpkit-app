@@ -1,20 +1,29 @@
 version: '3'
 
 services:
-  ekorpkit-frontend:
-    image: entelecheia/ekorpkit-frontend:latest
+  frontend:
+    image: $EKORPKIT_FRONTEND_DOCKER_IMAGE_NAME:latest
+    container_name: $EKORPKIT_FRONTEND_DOCKER_CONTAINER_NAME
+    env_file:
+      - frontend/.env
     ports:
-      - 18501:8501
-    depends_on:
-      - ekorpkit-backend
+      - "$EKORPKIT_FRONTEND_HOST_PORT:$EKORPKIT_FRONTEND_DOCKER_PORT"
     volumes:
-        - /home/yjlee/workspace:/workspace
-  ekorpkit-backend:
-    image: entelecheia/ekorpkit-backend:latest
+        - $HOST_WORKSPACE_ROOT:$EKORPKIT_WORKSPACE_ROOT
+        - ${PWD}/frontend/${EKORPKIT_FRONTEND_APP_DIR}:${EKORPKIT_FRONTEND_APP_DIR}
+  backend:
+    image: $EKORPKIT_BACKEND_DOCKER_IMAGE_NAME:latest
+    container_name: $EKORPKIT_BACKEND_DOCKER_CONTAINER_NAME
+    env_file:
+      - backend/.env
+    ulimits:
+      stack: 67108864
+      memlock: -1
     ports:
-      - 18181:8080
+      - "$EKORPKIT_BACKEND_HOST_PORT:$EKORPKIT_BACKEND_DOCKER_PORT"
     volumes:
-        - /home/yjlee/workspace:/workspace
+        - $HOST_WORKSPACE_ROOT:$EKORPKIT_WORKSPACE_ROOT
+        - ${PWD}/backend/${EKORPKIT_BACKEND_APP_DIR}:${EKORPKIT_BACKEND_APP_DIR}
     deploy:
       resources:
         reservations:
@@ -22,3 +31,7 @@ services:
             - driver: nvidia
               device_ids: ["7"]
               capabilities: [gpu]
+networks:
+  default:
+    name: $EKORPKIT_APP_DOCKER_NETWORK
+    external: true
