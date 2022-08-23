@@ -21,6 +21,7 @@ from ekorpkit import eKonf
 
 
 app = FastAPI()
+eKonf.setLogger()
 disco_cfg = eKonf.compose("model/disco")
 disco = eKonf.instantiate(disco_cfg)
 

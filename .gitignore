@@ -1,7 +1,4 @@
-# jupyterhub_config.py
-/jupyterhub*
 authorized_keys
-.env
 .vscode/
 .history/
 workspace/
@@ -16,11 +13,9 @@ _build/
 refs/
 tmp/
 /outputs/
-ekorpkit-book/docs/**/*.png
 disco-imagen/
 logs/
-ekorpkit-book/docs/tutorials/models/art/pretrained
-service/backend/pretrained
+backend/app/pretrained
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
@@ -126,7 +121,6 @@ celerybeat.pid
 *.sage.py
 
 # Environments
-.env
 .venv
 env/
 venv/
