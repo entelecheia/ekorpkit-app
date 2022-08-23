@@ -1,7 +1,7 @@
-import io
 import uuid
 import uvicorn
 import base64
+from io import BytesIO
 from PIL import Image
 from pydantic import BaseModel
 from fastapi import FastAPI, WebSocket
@@ -42,14 +42,23 @@ class ImagineRequest(BaseModel):
     text_prompts: str = "Beautiful photorealistic rendering of Jeju Island."
     batch_name: str = str(uuid.uuid4())
     steps = 100
+    skip_steps = 10
     display_rate = 10
     n_samples = 1
+    init_image: str = None
 
 
 @app.post("/imagine")
 async def imagine(req: ImagineRequest):
     req = req.dict()
-    req["n_samples"] = 1
+    init_image = req.get("init_image")
+    batch_name = req.get("batch_name")
+    if init_image is not None:
+        init_image = bytearr_to_image(init_image)
+        init_image_path = disco.save_init_image(batch_name, init_image)
+        print(f"init_image_path: {init_image_path}")
+        req["init_image"] = init_image_path
+
     response = disco.imagine(**req)
     image_filepaths = response.get("image_filepaths", [])
     if image_filepaths:
@@ -78,8 +87,12 @@ def get_samples(req: ImagineRequest):
         yield sample
 
 
+def bytearr_to_image(image):
+    return Image.open(BytesIO(base64.b64decode(image)))
+
+
 def image_to_bytearr(image: Image):
-    img_bytearr = io.BytesIO()
+    img_bytearr = BytesIO()
     image.save(img_bytearr, format=image.format)
     img_bytearr = img_bytearr.getvalue()
     encoded = base64.b64encode(img_bytearr)
