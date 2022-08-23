@@ -30,7 +30,7 @@ RUN pip install --upgrade --no-cache-dir pip && \
 
 RUN pip install --no-cache-dir --pre --upgrade ekorpkit
 
-COPY . .
+COPY ./app .
 
 EXPOSE 8080
 
