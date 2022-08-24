@@ -1,0 +1,17 @@
+.virtual_documents
+jupyterhub*
+.vscode
+.history
+workspace
+*/**/data/
+.ekorpkit
+.root
+.workspace
+_build
+data
+refs
+tmp
+disco-imagen
+logs
+outputs
+runs
