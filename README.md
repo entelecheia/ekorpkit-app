@@ -1,6 +1,6 @@
 # ekorpkit-app: backend and frontend services for ekorpkit
 
-## Libraries used
+## Frameworks for backend and frontend services
 
-- FastAPI: for the backend API
-- streamlit : for the interface
+- [FastAPI](https://fastapi.tiangolo.com/): for the backend API
+- [Streamlit](https://streamlit.io/) : for the interface
