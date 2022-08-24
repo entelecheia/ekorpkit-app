@@ -17,7 +17,7 @@ def imagine_from_backend(
         init_image = image_to_bytearr(init_image)
 
     req = {
-        "prompt": text_prompts,
+        "text_prompts": text_prompts,
         "steps": steps,
         "skip_steps": skip_steps,
         "n_samples": n_samples,
