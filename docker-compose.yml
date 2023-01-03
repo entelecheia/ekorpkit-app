@@ -2,36 +2,46 @@ version: '3'
 
 services:
   frontend:
-    image: $EKORPKIT_FRONTEND_DOCKER_IMAGE_NAME:latest
-    container_name: $EKORPKIT_FRONTEND_DOCKER_CONTAINER_NAME
+    build:
+      context: .
+      dockerfile: ./Dockerfile.frontend
+      args:
+        BUILD_FROM: $FRONTEND_BUILD_FROM
+    image: $FRONTEND_DOCKER_IMAGE_NAME
+    container_name: $FRONTEND_DOCKER_CONTAINER_NAME
     env_file:
-      - frontend/.env
+      - ./frontend/.env
     ports:
-      - "$EKORPKIT_FRONTEND_HOST_PORT:$EKORPKIT_FRONTEND_DOCKER_PORT"
+      - "$FRONTEND_HOST_PORT:$FRONTEND_DOCKER_PORT"
     volumes:
-        - $HOST_WORKSPACE_ROOT:$EKORPKIT_WORKSPACE_ROOT
-        - ${PWD}/frontend/${EKORPKIT_FRONTEND_APP_DIR}:${EKORPKIT_FRONTEND_APP_DIR}
+        - $HOST_WORKSPACE_ROOT:$WORKSPACE_ROOT
+        - ${BUILD_PATH}/frontend/${FRONTEND_APP_DIR}:${FRONTEND_APP_DIR}
   backend:
-    image: $EKORPKIT_BACKEND_DOCKER_IMAGE_NAME:latest
-    container_name: $EKORPKIT_BACKEND_DOCKER_CONTAINER_NAME
+    build:
+      context: .
+      dockerfile: ./Dockerfile.backend
+      args:
+        BUILD_FROM: $BACKEND_BUILD_FROM
+    image: $BACKEND_DOCKER_IMAGE_NAME:latest
+    container_name: $BACKEND_DOCKER_CONTAINER_NAME
     env_file:
-      - backend/.env
+      - ./backend/.env
     ulimits:
       stack: 67108864
       memlock: -1
     ports:
-      - "$EKORPKIT_BACKEND_HOST_PORT:$EKORPKIT_BACKEND_DOCKER_PORT"
+      - "$BACKEND_HOST_PORT:$BACKEND_DOCKER_PORT"
     volumes:
-        - $HOST_WORKSPACE_ROOT:$EKORPKIT_WORKSPACE_ROOT
-        - ${PWD}/backend/${EKORPKIT_BACKEND_APP_DIR}:${EKORPKIT_BACKEND_APP_DIR}
+        - $HOST_WORKSPACE_ROOT:$WORKSPACE_ROOT
+        - ${BUILD_PATH}/backend/${BACKEND_APP_DIR}:${BACKEND_APP_DIR}
     deploy:
       resources:
         reservations:
           devices:
             - driver: nvidia
-              device_ids: ["7"]
+              device_ids: ["${CUDA_DEVICE_ID}"]
               capabilities: [gpu]
 networks:
   default:
-    name: $EKORPKIT_APP_DOCKER_NETWORK
+    name: $APP_DOCKER_NETWORK
     external: true
