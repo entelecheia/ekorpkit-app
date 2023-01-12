@@ -69,8 +69,9 @@ async def imagine(req: ImagineRequest):
     #     print(f"init_image_path: {init_image_path}")
     #     req["init_image"] = init_image_path
 
-    response = sd.generate(**req)
-    image_filepaths = response.get("image_filepaths", [])
+    results = sd.generate(**req)
+    image_filepaths = results.image_filepaths
+    response = results.dict()
     if image_filepaths:
         response["images"] = [
             image_to_bytearr(Image.open(img_file)) for img_file in image_filepaths
