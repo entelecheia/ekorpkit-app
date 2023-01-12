@@ -4,7 +4,7 @@ services:
   frontend:
     build:
       context: .
-      dockerfile: ./Dockerfile.frontend
+      dockerfile: .docker/Dockerfile.frontend
       args:
         BUILD_FROM: $FRONTEND_BUILD_FROM
     image: $FRONTEND_DOCKER_IMAGE_NAME
@@ -14,12 +14,12 @@ services:
     ports:
       - "$FRONTEND_HOST_PORT:$FRONTEND_DOCKER_PORT"
     volumes:
-        - $HOST_WORKSPACE_ROOT:$WORKSPACE_ROOT
+        - $WORKSPACE_ROOT:$CONTAINER_WORKSPACE_ROOT
         - ${BUILD_PATH}/frontend/${FRONTEND_APP_DIR}:${FRONTEND_APP_DIR}
   backend:
     build:
       context: .
-      dockerfile: ./Dockerfile.backend
+      dockerfile: .docker/Dockerfile.backend
       args:
         BUILD_FROM: $BACKEND_BUILD_FROM
     image: $BACKEND_DOCKER_IMAGE_NAME
@@ -32,7 +32,7 @@ services:
     ports:
       - "$BACKEND_HOST_PORT:$BACKEND_DOCKER_PORT"
     volumes:
-        - $HOST_WORKSPACE_ROOT:$WORKSPACE_ROOT
+        - $WORKSPACE_ROOT:$CONTAINER_WORKSPACE_ROOT
         - ${BUILD_PATH}/backend/${BACKEND_APP_DIR}:${BACKEND_APP_DIR}
     deploy:
       resources:
