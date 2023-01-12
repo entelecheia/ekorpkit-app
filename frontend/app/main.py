@@ -5,7 +5,7 @@ from backend import ServiceError, imagine_from_backend, get_version
 
 backend_url = st.secrets["BACKEND_SERVER"]
 
-st.title("Disco Diffusion Simulator")
+st.title("Stable Diffusion Simulator")
 st.header("Generate images from text")
 
 
@@ -13,8 +13,8 @@ text_prompts = st.text_input(
     "What do you want to see?", "Beautiful photorealistic rendering of Jeju Island."
 )
 
-n_samples = st.slider("Number of samples", 1, 4, 1)
-steps = st.slider("Number of diffusion steps", 25, 1000, 100)
+num_samples = st.slider("Number of samples", 1, 4, 1)
+num_inference_steps = st.slider("Number of inference steps", 25, 1000, 100)
 
 uploaded_file = st.file_uploader("Choose an initial image")
 if uploaded_file is not None:
@@ -22,11 +22,8 @@ if uploaded_file is not None:
     init_image = Image.open(uploaded_file)
 
     st.image(uploaded_file, caption="Inital image", use_column_width=True)
-    skip_steps_ratio = 0.5
-    skip_steps = st.slider("Skip steps", 5, 100, int(steps * skip_steps_ratio))
 else:
     init_image = None
-    skip_steps = st.slider("Skip steps", 5, 100, 10)
 
 
 if st.button("Imagine!") and len(text_prompts) > 0:
@@ -49,12 +46,12 @@ if st.button("Imagine!") and len(text_prompts) > 0:
 
     try:
         response = imagine_from_backend(
-            backend_url, text_prompts, steps, skip_steps, n_samples, init_image
+            backend_url, text_prompts, num_inference_steps, num_samples, init_image
         )
         images = response.pop("images", [])
 
         margin = 0.1  # for better position of zoom in arrow
-        n_columns = min(n_samples, 2)
+        n_columns = min(num_samples, 2)
         cols = st.columns([1] + [margin, 1] * (n_columns - 1))
         for i, img in enumerate(images):
             cols[(i % n_columns) * 2].image(img)

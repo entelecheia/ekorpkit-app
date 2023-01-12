@@ -10,12 +10,18 @@ from fastapi import File
 from fastapi import FastAPI
 from fastapi import UploadFile
 from ekorpkit import eKonf
+from ekorpkit.tasks.multi import StableDiffusion
 
 
 app = FastAPI()
-eKonf.setLogger()
-disco_cfg = eKonf.compose("model/disco")
-disco = eKonf.instantiate(disco_cfg)
+
+ws = eKonf.set_workspace(
+    workspace="/workspace",
+    project="ekorpkit-app", 
+    task="aiart", 
+    log_level="INFO"
+)
+sd = StableDiffusion()
 
 
 @app.get("/")
@@ -29,22 +35,25 @@ def read_version():
 
 
 @app.get("/config")
-def read_config(config_group: str = "model/disco"):
+def read_config(config_group: str = "task=stable.diffusion"):
     return eKonf.compose(config_group, return_as_dict=True)
 
 
-@app.get("/env")
+@app.get("/envs")
 def read_env():
-    return eKonf.env().dict()
+    return ws.envs.dict()
+
+
+@app.get("/secrets")
+def read_env():
+    return ws.secrets.dict()
 
 
 class ImagineRequest(BaseModel):
     text_prompts: str = "Beautiful photorealistic rendering of Jeju Island."
     batch_name: str = str(uuid.uuid4())
-    steps = 100
-    skip_steps = 10
-    display_rate = 10
-    n_samples = 1
+    num_inference_steps = 100
+    num_samples = 1
     init_image: str = None
 
 
@@ -53,39 +62,20 @@ async def imagine(req: ImagineRequest):
     batch_name = str(uuid.uuid4())
     req.batch_name = batch_name
     req = req.dict()
-    init_image = req.get("init_image")
-    if init_image is not None:
-        init_image = bytearr_to_image(init_image)
-        init_image_path = disco.save_init_image(batch_name, init_image)
-        print(f"init_image_path: {init_image_path}")
-        req["init_image"] = init_image_path
+    # init_image = req.get("init_image")
+    # if init_image is not None:
+    #     init_image = bytearr_to_image(init_image)
+    #     init_image_path = sd.save_init_image(batch_name, init_image)
+    #     print(f"init_image_path: {init_image_path}")
+    #     req["init_image"] = init_image_path
 
-    response = disco.imagine(**req)
+    response = sd.generate(**req)
     image_filepaths = response.get("image_filepaths", [])
     if image_filepaths:
         response["images"] = [
             image_to_bytearr(Image.open(img_file)) for img_file in image_filepaths
         ]
     return response
-
-
-@app.websocket("/imagine_stream")
-async def imagine_websocket(websocket: WebSocket, req: ImagineRequest):
-    await websocket.accept()
-    while True:
-        if req is not None:
-            for sample in get_samples(req):
-                await websocket.send_json(sample)
-
-
-def get_samples(req: ImagineRequest):
-    req = req.dict()
-    for i, sample in enumerate(disco.imagine_generator(**req)):
-        image = sample.get("image")
-        if image is not None:
-            print(i, sample)
-            sample["image"] = image_to_bytearr(image)
-        yield sample
 
 
 def bytearr_to_image(image):

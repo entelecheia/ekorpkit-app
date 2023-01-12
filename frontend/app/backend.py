@@ -10,7 +10,7 @@ class ServiceError(Exception):
 
 
 def imagine_from_backend(
-    backend_url, text_prompts, steps, skip_steps=10, n_samples=1, init_image=None
+    backend_url, text_prompts, num_inference_steps, num_samples=1, init_image=None
 ):
     url = backend_url + "/imagine"
     if init_image:
@@ -18,9 +18,8 @@ def imagine_from_backend(
 
     req = {
         "text_prompts": text_prompts,
-        "steps": steps,
-        "skip_steps": skip_steps,
-        "n_samples": n_samples,
+        "num_inference_steps": num_inference_steps,
+        "num_samples": num_samples,
         "init_image": init_image,
     }
     r = requests.post(url, json=req)
